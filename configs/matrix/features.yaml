@@ -1,0 +1,9 @@
+# 特征方案对比（开发期 2021–2022）：新筛选方法 vs 全部 52 个因子 vs 旧方法的 8 个因子；LSTM（5 个种子）与岭回归
+ref: lstm_feat_all
+experiments:
+  - {config: configs/experiments/lstm_excess_h5.yaml, name: lstm_feat_all, set: [features.selection.enabled=false]}
+  - {config: configs/experiments/lstm_excess_h5.yaml, name: lstm_feat_new, set: [features.selection.enabled=true, features.selection.method=importance]}
+  - {config: configs/experiments/lstm_excess_h5.yaml, name: lstm_feat_old, set: [features.selection.enabled=true, features.selection.method=ic_threshold]}
+  - {config: configs/experiments/ridge_excess_h5.yaml, name: ridge_feat_all, set: [features.selection.enabled=false]}
+  - {config: configs/experiments/ridge_excess_h5.yaml, name: ridge_feat_new, set: [features.selection.enabled=true, features.selection.method=importance]}
+  - {config: configs/experiments/ridge_excess_h5.yaml, name: ridge_feat_old, set: [features.selection.enabled=true, features.selection.method=ic_threshold]}
