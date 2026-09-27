@@ -1,0 +1,9 @@
+# E2 模型对比（h=5，excess 标签）：LSTM 对比各对照组
+ref: lstm_excess_h5
+experiments:
+  - configs/experiments/lstm_excess_h5.yaml
+  - configs/experiments/gru_excess_h5.yaml
+  - configs/experiments/transformer_excess_h5.yaml
+  - configs/experiments/gbdt_excess_h5.yaml
+  - configs/experiments/ridge_excess_h5.yaml
+  - configs/experiments/momentum_h5.yaml

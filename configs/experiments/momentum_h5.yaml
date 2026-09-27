@@ -1,0 +1,12 @@
+# 最低门槛：行业动量（过去 20 日收益排序），同样经过 ETF 映射
+_base_: ../base.yaml
+experiment:
+  name: momentum_h5
+label:
+  horizon: 5
+  type: excess
+model:
+  name: momentum
+  params:
+    lookback: 20
+    skip: 0

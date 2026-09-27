@@ -1,0 +1,10 @@
+# 主线：LSTM，截面超额收益标签，5 日（周频调仓）
+_base_: ../base.yaml
+experiment:
+  name: lstm_excess_h5
+  description: LSTM 主模型 / excess 标签 / h=5
+label:
+  horizon: 5
+  type: excess
+model:
+  name: lstm

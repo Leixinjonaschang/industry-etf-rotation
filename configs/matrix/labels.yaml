@@ -1,0 +1,17 @@
+# E1 标签对比：LSTM × {raw, excess} × h ∈ {5, 10, 20}
+ref: lstm_excess_h5
+experiments:
+  - configs/experiments/lstm_excess_h5.yaml
+  - configs/experiments/lstm_raw_h5.yaml
+  - config: configs/experiments/lstm_excess_h5.yaml
+    name: lstm_excess_h10
+    set: [label.horizon=10]
+  - config: configs/experiments/lstm_raw_h5.yaml
+    name: lstm_raw_h10
+    set: [label.horizon=10]
+  - config: configs/experiments/lstm_excess_h5.yaml
+    name: lstm_excess_h20
+    set: [label.horizon=20]
+  - config: configs/experiments/lstm_raw_h5.yaml
+    name: lstm_raw_h20
+    set: [label.horizon=20]

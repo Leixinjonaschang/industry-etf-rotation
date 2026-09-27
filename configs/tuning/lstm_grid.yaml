@@ -1,0 +1,9 @@
+# LSTM 开发期调参（只在 tune 阶段 2021–2022 上比较，按调仓日 RankIC 排序）
+# 3 × 2 × 2 = 12 组试验；损失函数等其余维度留作消融实验（R1）
+base: ../experiments/lstm_excess_h5.yaml
+set:
+  - train.n_seeds=1          # 调参阶段用单种子节省时间，选定后正式实验恢复 5 个种子
+grid:
+  model.params.seq_len: [20, 40, 60]
+  model.params.hidden: [32, 64]
+  train.lr: [1.0e-4, 3.0e-4]

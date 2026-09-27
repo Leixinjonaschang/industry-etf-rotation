@@ -1,0 +1,15 @@
+# 对照组：梯度提升树（默认 scikit-learn HistGradientBoosting；backend: lightgbm 可切换）
+_base_: ../base.yaml
+experiment:
+  name: gbdt_excess_h5
+label:
+  horizon: 5
+  type: excess
+model:
+  name: gbdt
+  params:
+    backend: sklearn
+    max_iter: 400
+    learning_rate: 0.03
+    max_depth: 4
+    min_samples_leaf: 200

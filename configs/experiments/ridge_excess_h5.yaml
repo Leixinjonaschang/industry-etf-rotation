@@ -1,0 +1,11 @@
+# 对照组：岭回归（α 在验证集上按 RankIC 选择）
+_base_: ../base.yaml
+experiment:
+  name: ridge_excess_h5
+label:
+  horizon: 5
+  type: excess
+model:
+  name: ridge
+  params:
+    alphas: [0.1, 1.0, 10.0, 100.0, 1000.0]

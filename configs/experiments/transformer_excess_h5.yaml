@@ -1,0 +1,12 @@
+# 对照组：时间维 Transformer 编码器
+_base_: ../base.yaml
+experiment:
+  name: transformer_excess_h5
+label:
+  horizon: 5
+  type: excess
+model:
+  name: transformer
+  params:
+    layers: 2
+    tf_heads: 4

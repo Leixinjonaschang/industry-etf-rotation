@@ -1,0 +1,10 @@
+# 标签对比：LSTM，原始收益标签，5 日
+_base_: ../base.yaml
+experiment:
+  name: lstm_raw_h5
+  description: LSTM / raw 标签 / h=5
+label:
+  horizon: 5
+  type: raw
+model:
+  name: lstm

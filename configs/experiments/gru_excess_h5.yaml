@@ -1,0 +1,9 @@
+# 对照组：GRU（与 LSTM 共用训练器与超参数）
+_base_: ../base.yaml
+experiment:
+  name: gru_excess_h5
+label:
+  horizon: 5
+  type: excess
+model:
+  name: gru
