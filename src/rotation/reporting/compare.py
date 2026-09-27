@@ -96,7 +96,7 @@ def compare_experiments(
             )
             record.update(
                 {
-                    "rank_ic_diff(ref-other)": res["mean_diff"],
+                    "rank_ic_diff_all_days(ref-other)": res["mean_diff"],
                     "rank_ic_diff_t": res["t"],
                     "rank_ic_diff_p": res["p_value"],
                 }
@@ -119,7 +119,7 @@ def compare_experiments(
     if len(tests_df):
         save_csv(tests_df, folder / "tests_vs_ref.csv")
     to_excel({"对比": table, "显著性检验": tests_df}, folder / "comparison.xlsx")
-    text = ["# 实验对比（" + phase + "）", "", markdown_table(table), ""]
+    text = ["# 实验对比（" + phase + "）", "", markdown_table(table.T), ""]
     if len(tests_df):
         text += [
             f"## 相对参照 {ref} 的检验（负的 DM 统计量表示参照模型误差更小）",

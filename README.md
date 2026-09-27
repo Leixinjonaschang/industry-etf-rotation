@@ -29,7 +29,7 @@ export ROTATION_DATA_DIR=/path/to/数据目录
 - 模型很小，MPS 不一定比 CPU 快。先跑 `rotation device --bench`，再按建议设置：
   `--set train.device=cpu`，或直接改 `configs/base.yaml`。
 - 已自动设置 `PYTORCH_ENABLE_MPS_FALLBACK=1`：MPS 不支持的算子会回退到 CPU。
-- 一个实验约 13 折 × 5 个种子。每折结果单独缓存，中断后重跑同一条命令即可续跑。
+- 一个实验约 13 折 × 5 个种子。每折结果按配置哈希缓存在 `outputs/_folds/`：中断后重跑同一条命令即可续跑，只改策略/映射/回测参数的实验不会重新训练。
 
 ## 研究流程（别让测试期"泄露"进设计）
 
@@ -54,6 +54,7 @@ tune 阶段会把 2023 年以后的所有价格截掉，代码层面看不到。
 | LSTM 调参（tune） | `uv run rotation tune --grid configs/tuning/lstm_grid.yaml` |
 | 标签对比 E1 | `uv run rotation matrix --file configs/matrix/labels.yaml` |
 | 模型对比 E2 | `uv run rotation matrix --file configs/matrix/models.yaml` |
+| 稳健性 / 消融 | `uv run rotation matrix --file configs/matrix/robustness.yaml` |
 | 对比已完成实验 | `uv run rotation compare -e lstm_excess_h5 -e momentum_h5` |
 | 某日映射全景 | `uv run rotation mapping-table -c configs/base.yaml --date 2022-12-30` |
 | 列出全部因子 | `uv run rotation factors` |
@@ -76,7 +77,7 @@ tune 阶段会把 2023 年以后的所有价格截掉，代码层面看不到。
 | `navs.csv` / `strategy_metrics.csv` | ETF 策略、行业指数策略、等权、沪深300、动量的净值与指标 |
 | `mapping_*.csv` | 每期映射明细、失败原因、覆盖率、年末全景表 |
 | `factor_selection_*.{json,csv}` | 入选因子及其 IC 统计 |
-| `folds/` | 逐折预测与训练日志（缓存） |
+| `outputs/_folds/<哈希>/` | 逐折预测与训练日志（按配置共享的缓存） |
 
 ## 代码结构（`src/rotation/`）
 

@@ -1,0 +1,27 @@
+# 稳健性 / 消融：每个实验只改一个因素，其余与主线 lstm_excess_h5 相同。
+# 只改策略、映射、回测参数（R5–R7）的实验会复用主线的逐折预测缓存，不会重新训练。
+ref: lstm_excess_h5
+experiments:
+  - configs/experiments/lstm_excess_h5.yaml
+  # R1 损失函数
+  - {config: configs/experiments/lstm_excess_h5.yaml, name: r1_loss_mse, set: [train.loss=mse]}
+  - {config: configs/experiments/lstm_excess_h5.yaml, name: r1_loss_ic, set: [train.loss=ic]}
+  # R2 特征
+  - config: configs/experiments/lstm_excess_h5.yaml
+    name: r2_with_valuation
+    set: ["features.categories=[momentum, trend, oscillator, volume, volatility, valuation]"]
+  - {config: configs/experiments/lstm_excess_h5.yaml, name: r2_norm_ts, set: [features.normalize=ts]}
+  - {config: configs/experiments/lstm_excess_h5.yaml, name: r2_all_factors, set: [features.selection.enabled=false]}
+  # R3 结构
+  - {config: configs/experiments/lstm_excess_h5.yaml, name: r3_cross_attention, set: [model.params.cross_attention=true]}
+  # R4 训练方式
+  - {config: configs/experiments/lstm_excess_h5.yaml, name: r4_rolling750, set: [split.mode=rolling]}
+  # R5 组合
+  - {config: configs/experiments/lstm_excess_h5.yaml, name: r5_top3, set: [strategy.top_n=3]}
+  - {config: configs/experiments/lstm_excess_h5.yaml, name: r5_rank_weight, set: [strategy.weighting=rank]}
+  - {config: configs/experiments/lstm_excess_h5.yaml, name: r5_buffer2, set: [strategy.buffer=2]}
+  # R6 映射
+  - {config: configs/experiments/lstm_excess_h5.yaml, name: r6_fallback_cash, set: [mapping.fallback=cash]}
+  - {config: configs/experiments/lstm_excess_h5.yaml, name: r6_tau_p_070, set: [mapping.tau_p=0.70]}
+  # R7 成本
+  - {config: configs/experiments/lstm_excess_h5.yaml, name: r7_cost20, set: [backtest.cost_bps=20]}

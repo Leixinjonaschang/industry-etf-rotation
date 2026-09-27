@@ -105,6 +105,8 @@ def write_report(cfg: Config, out: Path) -> Path:
     coverage = _read(out / "mapping_coverage.csv", index_col=0)
     selection = _read(out / "factor_selection_table.csv", index_col=0)
     rnd = read_json(out / "random_test.json") if (out / "random_test.json").exists() else {}
+    if pred is None and navs is None:
+        log.warning("%s 下没有预测或回测结果，请先运行 predict / evaluate / backtest 阶段", out)
 
     if series is not None:
         figures.ic_chart(series, fig_dir / "rank_ic.png", f"{name} 调仓日 RankIC")
@@ -126,7 +128,10 @@ def write_report(cfg: Config, out: Path) -> Path:
             fig_dir / "random_test.png",
             f"{name} 随机选 {cfg.strategy.top_n} 个行业的年化收益分布",
         )
-    fold_logs = sorted((out / "folds").glob("*/fold_*.json"))
+    meta_path = out / "predict_meta.json"
+    rel = read_json(meta_path).get("fold_dir") if meta_path.exists() else None
+    fold_dir = out.parent.parent / rel if rel else None  # outputs/<实验>/<阶段> → outputs/
+    fold_logs = sorted(fold_dir.glob("fold_*.json")) if fold_dir and fold_dir.is_dir() else []
     histories = []
     for path in fold_logs:
         fit = read_json(path).get("fit", {})

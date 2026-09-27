@@ -155,13 +155,18 @@ class Experiment:
             self.out / "folds.csv", index=False, encoding="utf-8-sig"
         )
         key = fold_cache_key(cfg, self.panel.feature_names, self.industry.fingerprint)
-        preds, produces = run_walk_forward(
-            cfg, self.panel, folds, self.out / "folds" / key, self.force
-        )
+        # 逐折缓存按内容哈希共享：只改策略/映射/回测参数的实验会直接复用已训练的预测
+        fold_dir = cfg.output_root / "_folds" / key
+        preds, produces = run_walk_forward(cfg, self.panel, folds, fold_dir, self.force)
         preds.to_parquet(self.out / "predictions.parquet")
         write_json(
             self.out / "predict_meta.json",
-            {"produces_returns": produces, "fold_key": key, "n_folds": len(folds)},
+            {
+                "produces_returns": produces,
+                "fold_key": key,
+                "fold_dir": f"_folds/{key}",
+                "n_folds": len(folds),
+            },
         )
         self._predictions, self._produces_returns = preds, produces
 

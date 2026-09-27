@@ -7,12 +7,14 @@ from pathlib import Path
 import pandas as pd
 
 
-def to_excel(tables: dict[str, pd.DataFrame], path: Path) -> Path:
+def to_excel(tables: dict[str, pd.DataFrame | None], path: Path) -> Path | None:
+    """每张表一个工作表；没有任何非空表时不生成文件。"""
+    tables = {k: v for k, v in tables.items() if v is not None and len(v)}
+    if not tables:
+        return None
     path.parent.mkdir(parents=True, exist_ok=True)
     with pd.ExcelWriter(path, engine="openpyxl") as writer:
         for name, table in tables.items():
-            if table is None or len(table) == 0:
-                continue
             frame = table.copy()
             if isinstance(frame.index, pd.DatetimeIndex):
                 frame.index = frame.index.strftime("%Y-%m-%d")
