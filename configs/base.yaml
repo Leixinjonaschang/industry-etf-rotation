@@ -48,7 +48,7 @@ features:
   min_valid_ratio: 0.9
   pca_components: 0
   selection:
-    enabled: true
+    enabled: false                     # 第二轮调参：用全部 52 个候选因子明显优于筛选后的 8 个（LSTM 与岭回归均如此）
     min_abs_t: 2.0
     require_sign_stability: true
     corr_threshold: 0.8
@@ -66,11 +66,11 @@ split:
 
 model:
   name: lstm
-  params:                              # 第一轮调参（2021–2022）：hidden=32 在 6 组对比中全部优于 64
+  params:                              # 调参（2021–2022）：第一轮 hidden 32>64；第二轮全因子 + dropout 0.4 最优
     seq_len: 20
     hidden: 32
     layers: 2
-    dropout: 0.2
+    dropout: 0.4
     emb_dim: 8
     cross_attention: false
 

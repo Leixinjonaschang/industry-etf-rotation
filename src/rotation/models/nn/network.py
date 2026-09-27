@@ -1,5 +1,8 @@
 """行业打分网络：共享时间编码器（LSTM / GRU / Transformer）+ 行业嵌入 + 可选截面注意力。
 
+可选 linear_skip：在输出上叠加一条"当日特征 → 线性打分"的残差通路（wide & deep 结构），
+让网络同时保留线性截面信号，LSTM 只需学习线性部分之外的时序/非线性信息。
+
 输入 x: [B, N, L, F]（B 个日期 × N 个行业 × L 天窗口 × F 个特征，已拼接市场状态特征）
 输出   : [B, N]，每个行业一个预测值（标准化后的收益率量纲）
 """
@@ -25,6 +28,7 @@ class IndustryScorer(nn.Module):
         tf_heads: int = 4,
         tf_ff_mult: int = 2,
         max_len: int = 256,
+        linear_skip: bool = False,
     ):
         super().__init__()
         self.encoder_type = encoder
@@ -65,6 +69,7 @@ class IndustryScorer(nn.Module):
         self.head = nn.Sequential(
             nn.Linear(width, hidden), nn.GELU(), nn.Dropout(dropout), nn.Linear(hidden, 1)
         )
+        self.skip = nn.Linear(n_inputs, 1) if linear_skip else None
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         b, n, length, f = x.shape
@@ -82,4 +87,7 @@ class IndustryScorer(nn.Module):
         if self.cross is not None:
             attended, _ = self.cross(h, h, h, need_weights=False)
             h = self.cross_norm(h + attended)
-        return self.head(h).squeeze(-1)
+        out = self.head(h).squeeze(-1)
+        if self.skip is not None:
+            out = out + self.skip(x[:, :, -1, :]).squeeze(-1)
+        return out

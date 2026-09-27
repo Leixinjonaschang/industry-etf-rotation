@@ -101,6 +101,7 @@ class NNTrainer:
             tf_heads=int(p.get("tf_heads", 4)),
             tf_ff_mult=int(p.get("tf_ff_mult", 2)),
             max_len=max(int(p.get("max_len", 256)), self.seq_len),
+            linear_skip=bool(p.get("linear_skip", False)),
         ).to(self.device)
 
     @torch.no_grad()
