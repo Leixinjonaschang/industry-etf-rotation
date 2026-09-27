@@ -48,10 +48,15 @@ features:
   min_valid_ratio: 0.9
   pca_components: 0
   selection:
-    enabled: false                     # 第二轮调参：用全部 52 个候选因子明显优于筛选后的 8 个（LSTM 与岭回归均如此）
+    enabled: false                     # 第二轮调参：用全部 52 个候选因子明显优于旧筛选的 8 个（LSTM 与岭回归均如此）
+    method: importance                 # importance（RF + XGBoost + |RankIC| 综合分 → 相关簇保留/PCA 合成 → 剔除末位）| ic_threshold（旧方法）
+    corr_threshold: 0.8                # |ρ| ≥ 该值的因子聚成一簇（全链接）
+    tree_max_samples: 30000
+    high_importance_frac: 0.5          # 综合分位于前 50% 视为"重要性高"；簇内 ≥2 个高重要性因子时做 PCA 合成
+    drop_bottom_frac: 0.2              # 剔除综合分排名最后 20% 的因子
+    # 以下只用于 ic_threshold 旧方法
     min_abs_t: 2.0
     require_sign_stability: true
-    corr_threshold: 0.8
     max_factors: 15
     min_factors: 8
     min_per_category: 1

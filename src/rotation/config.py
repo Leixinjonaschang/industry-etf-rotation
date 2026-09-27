@@ -82,14 +82,21 @@ class LabelConfig(_Strict):
 
 class SelectionConfig(_Strict):
     enabled: bool = True
+    # importance：RF + XGBoost 重要性 + |RankIC| 综合打分 → 相关簇内保留或 PCA 合成 → 剔除末位
+    # ic_threshold：旧方法（|t| 门槛 + 方向稳定 + 贪心去相关），保留用于对比
+    method: Literal["importance", "ic_threshold"] = "importance"
+    corr_threshold: float = 0.8
+    tree_max_samples: int = 30_000  # 树模型重要性最多使用的样本行数（超出则随机抽样）
+    # —— importance 方法
+    high_importance_frac: float = Field(0.5, gt=0, le=1)  # 综合分位于前该比例视为"重要性高"
+    drop_bottom_frac: float = Field(0.2, ge=0, lt=1)  # 综合分排名最后该比例的因子剔除
+    # —— ic_threshold 方法
     min_abs_t: float = 2.0
     require_sign_stability: bool = True
-    corr_threshold: float = 0.8
     max_factors: int = 15
     min_factors: int = 8
     min_per_category: int = 1
     tree_weight: float = 0.2
-    tree_max_samples: int = 30_000
 
 
 class FeatureConfig(_Strict):

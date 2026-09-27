@@ -30,7 +30,7 @@ from rotation.dataset.splits import make_folds
 from rotation.evaluation.report import evaluate_predictions
 from rotation.features.builder import FeatureSet, build_features
 from rotation.features.registry import CATEGORY_CN
-from rotation.features.selection import SelectionResult, select_factors
+from rotation.features.selection import SelectionResult, apply_selection, select_factors
 from rotation.labels import Labels, make_labels
 from rotation.models.registry import model_history
 from rotation.pipeline.walk_forward import fold_cache_key, run_walk_forward
@@ -101,7 +101,7 @@ class Experiment:
     def panel(self) -> Panel:
         fs = self.features_all
         if self.selection is not None:
-            fs = fs.subset(self.selection.selected, self.selection.signs)
+            fs = apply_selection(fs, self.selection)
         return build_panel(fs, self.labels, self.industry)
 
     # ------------------------------------------------------------------ 阶段
@@ -138,7 +138,9 @@ class Experiment:
         table.insert(0, "类别", table["category"].map(CATEGORY_CN))
         save_csv(table, self.out / "factor_selection_table.csv")
         write_json(self.out / "factor_selection.json", sel.to_dict())
-        log.info("入选因子（%d）：%s", len(sel.selected), ", ".join(sel.selected))
+        log.info(
+            "最终特征（%d）：%s", len(sel.feature_names), ", ".join(sel.feature_names)
+        )
 
     def stage_predict(self) -> None:
         cfg = self.cfg
@@ -154,7 +156,10 @@ class Experiment:
         pd.DataFrame([f.summary(self.panel.dates) for f in folds]).to_csv(
             self.out / "folds.csv", index=False, encoding="utf-8-sig"
         )
-        key = fold_cache_key(cfg, self.panel.feature_names, self.industry.fingerprint)
+        names = list(self.panel.feature_names)
+        if self.selection is not None and self.selection.composites:
+            names.append(f"selection:{self.selection.digest}")  # PCA 载荷变化时不复用旧缓存
+        key = fold_cache_key(cfg, names, self.industry.fingerprint)
         # 逐折缓存按内容哈希共享：只改策略/映射/回测参数的实验会直接复用已训练的预测
         fold_dir = cfg.output_root / "_folds" / key
         preds, produces = run_walk_forward(cfg, self.panel, folds, fold_dir, self.force)

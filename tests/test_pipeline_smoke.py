@@ -91,10 +91,13 @@ def test_lstm_end_to_end(tmp_path, raw_dir):
         "train.n_seeds=2",
         "train.device=cpu",
         "train.batch_dates=16",
+        "features.selection.enabled=true",  # 同进程里 torch + XGBoost（子进程）重要性
     ]
     cfg = _config(tmp_path, raw_dir, "smoke_lstm", extra)
     exp = Experiment(cfg)
     exp.run()
     _check_outputs(exp.out)
+    assert (exp.out / "factor_selection_table.csv").exists()
+    assert exp.panel.feature_names == exp.selection.feature_names
     # 第二次运行应直接命中逐折缓存
     Experiment(cfg).run(["predict"])
