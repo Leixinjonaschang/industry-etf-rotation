@@ -1,0 +1,53 @@
+[project]
+name = "industry-etf-rotation"
+version = "0.1.0"
+description = "申万一级行业收益预测（LSTM）+ 行业/主题 ETF 映射的轮动策略"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "pyarrow>=15",
+    "scipy>=1.11",
+    "scikit-learn>=1.4",
+    "torch>=2.3",
+    "pydantic>=2.6",
+    "pyyaml>=6.0",
+    "matplotlib>=3.8",
+    "openpyxl>=3.1",
+]
+
+[project.optional-dependencies]
+# macOS 上 LightGBM 需要先 `brew install libomp`；默认 GBDT 对照组使用 scikit-learn，不依赖它。
+lightgbm = ["lightgbm>=4.3"]
+
+[project.scripts]
+rotation = "rotation.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8.0", "ruff>=0.5"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rotation"]
+
+[tool.uv]
+# 只为 macOS 与 Linux 解析依赖（训练环境为 macOS / Apple Silicon）。
+environments = ["sys_platform == 'darwin'", "sys_platform == 'linux'"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "."]
+addopts = "-q"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501", "B905", "B008"]

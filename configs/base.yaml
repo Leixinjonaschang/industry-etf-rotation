@@ -1,0 +1,120 @@
+# 全局默认配置。实验文件用 `_base_: ../base.yaml` 继承，只写需要改动的部分。
+# 相对路径均相对于项目根目录；环境变量 ROTATION_DATA_DIR / ROTATION_CACHE_DIR / ROTATION_OUTPUT_DIR 可覆盖目录。
+
+experiment:
+  name: base
+  seed: 42
+  phase: tune            # tune = 开发期伪测试 2021–2022；test = 最终样本外 2023–2025（需显式指定并确认）
+
+paths:
+  data_dir: ../../未命名文件夹          # 原始数据所在目录
+  industry_file: 申万一级指数_原始数据.xlsx
+  etf_industry_list: 行业指数ETF.xlsx
+  etf_theme_list: 主题指数ETF.xlsx
+  etf_daily_dir: 后复权
+  etf_whitelist: configs/etf_whitelist.yaml
+  cache_dir: cache
+  output_dir: outputs
+
+data:
+  exclude_industries: [综合]           # 31 个一级行业剔除"综合"
+  load_start: 2014-01-01               # 2014 年只用于指标预热
+  sample_start: 2015-01-01
+  select_end: 2020-12-31               # 因子筛选只用到这里
+  tune_start: 2021-01-01               # 开发期伪测试（调参、选标签/模型）
+  dev_end: 2022-12-31
+  test_start: 2023-01-01               # 最终样本外测试期
+  test_end: 2025-12-31
+  benchmark_codes: ["510300"]
+  etf_amount_unit_change: 2026-01-01
+  etf_amount_multiplier_before: 1000.0
+
+label:
+  horizon: 5                           # 预测未来 h 个交易日，同时也是调仓间隔
+  type: excess                         # raw | excess（减去 30 行业等权均值）
+  price: oo                            # oo: Open[t+h+1]/Open[t+1]-1（与次日开盘成交对齐）；cc: 收盘到收盘
+
+features:
+  categories: [momentum, trend, oscillator, volume, volatility]   # 加 valuation 即引入估值因子
+  include: []
+  exclude: []
+  use_market: true
+  normalize: cs                        # none | ts | cs | ts+cs | cs_rank
+  ts_window: 60
+  market_ts_window: 250
+  winsor_mad: 5.0
+  clip: 5.0
+  ffill_limit: 5
+  min_valid_ratio: 0.9
+  pca_components: 0
+  selection:
+    enabled: true
+    min_abs_t: 2.0
+    require_sign_stability: true
+    corr_threshold: 0.8
+    max_factors: 15
+    min_factors: 8
+    min_per_category: 1
+    tree_weight: 0.2
+
+split:
+  mode: expanding                      # expanding | rolling
+  train_window: 750                    # rolling 模式的窗口
+  retrain_every: 60                    # 每 60 个交易日重训一次
+  val_len: 250                         # 早停用的验证集长度
+  min_train: 500
+
+model:
+  name: lstm
+  params:
+    seq_len: 40
+    hidden: 64
+    layers: 2
+    dropout: 0.2
+    emb_dim: 8
+    cross_attention: false
+
+train:
+  device: auto                         # auto（CUDA→MPS→CPU）| mps | cpu；可用 `rotation device --bench` 实测
+  loss: mse+ic                         # mse | huber | ic | listnet | 组合如 mse+ic
+  ic_weight: 0.5
+  lr: 3.0e-4
+  weight_decay: 1.0e-4
+  epochs: 50
+  min_epochs: 5
+  patience: 8
+  lr_patience: 3
+  lr_factor: 0.5
+  batch_dates: 32
+  grad_clip: 1.0
+  n_seeds: 5
+  early_stop_metric: rank_ic           # rank_ic | loss
+  num_threads: 0
+
+strategy:
+  top_n: 5
+  weighting: equal                     # equal | rank
+  buffer: 0
+
+mapping:
+  enabled: true
+  corr_window: 120
+  min_corr_obs: 110
+  min_listing_days: 120
+  liq_window: 20
+  min_amount: 1.0e7                    # 近 20 日日均成交额 ≥ 1000 万元
+  min_valid_days: 18
+  tau_p: 0.80
+  tau_ex: 0.50
+  weights: [0.25, 0.25, 0.5]           # pearson, spearman, 超额相关
+  tier_priority: true
+  retention_bonus: 0.03
+  fallback: next_rank                  # next_rank | cash | broad
+  max_fallback_rank: 12
+  broad_code: "510300"
+
+backtest:
+  cost_bps: 5.0                        # 单边：佣金 + 滑点
+  risk_free: 0.015
+  n_random: 1000
+  momentum_lookback: 20
