@@ -6,6 +6,9 @@
     grid:
       model.params.seq_len: [20, 40, 60]
       train.lr: [3.0e-4, 1.0e-3]
+
+试验命名为 tune__<网格文件名>__tNNN，结果汇总在 outputs/_tuning/<网格文件名>/trials.csv；
+与已有试验配置相同的会直接复用逐折缓存。
 """
 
 from __future__ import annotations
@@ -34,18 +37,19 @@ def run_grid(grid_file: Path, extra: list[str] | None = None) -> pd.DataFrame:
     keys = list(grid)
     combos = list(itertools.product(*[grid[k] for k in keys])) or [()]
     base_cfg = load_config(base_path, common)
-    base_name = base_cfg.experiment.name
+    tag = str(spec.get("name") or grid_file.stem)
     rows = []
     for i, values in enumerate(combos, start=1):
         overrides = common + [
             f"{k}={json.dumps(v, ensure_ascii=False)}" for k, v in zip(keys, values)
         ]
-        overrides += [f"experiment.name=tune__{base_name}__t{i:03d}", "experiment.phase=tune"]
+        overrides += [f"experiment.name=tune__{tag}__t{i:03d}", "experiment.phase=tune"]
         cfg = load_config(base_path, overrides)
         log.info("试验 %d/%d：%s", i, len(combos), dict(zip(keys, values)))
         exp = Experiment(cfg)
         exp.run(["features", "predict", "evaluate"])
         metrics = pd.read_csv(exp.out / "prediction_metrics.csv", index_col=0)
+        yearly = pd.read_csv(exp.out / "prediction_yearly.csv", index_col=0)
         k = cfg.strategy.top_n
         rows.append(
             {
@@ -53,12 +57,13 @@ def run_grid(grid_file: Path, extra: list[str] | None = None) -> pd.DataFrame:
                 **dict(zip(keys, values)),
                 "rank_ic": metrics.at["rebalance", "rank_ic"],
                 "rank_ic_t_all": metrics.at["all_days", "rank_ic_t"],
+                **{f"rank_ic_{year}": yearly.at[year, "rank_ic"] for year in yearly.index},
                 f"hit@{k}": metrics.at["rebalance", f"hit@{k}"],
                 "long_short": metrics.at["rebalance", "long_short"],
             }
         )
     trials = pd.DataFrame(rows).sort_values("rank_ic", ascending=False).set_index("trial")
-    folder = base_cfg.output_root / "_tuning" / base_name
+    folder = base_cfg.output_root / "_tuning" / tag
     save_csv(trials, folder / "trials.csv")
     print(markdown_table(trials))
     log.info("调参结果 → %s", folder / "trials.csv")

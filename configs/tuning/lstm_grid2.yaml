@@ -1,0 +1,11 @@
+# LSTM 第二轮调参（仍只用 tune 阶段 2021–2022）
+# 第一轮结论：hidden=32 全面优于 64，seq_len 与 lr 影响不大 → 已把 seq_len=20、hidden=32、lr=3e-4 写入 base.yaml。
+# 本轮沿"更小/更强正则"的方向继续，并检验排序损失与因子集合：2 × 2 × 2 × 2 = 16 组。
+base: ../experiments/lstm_excess_h5.yaml
+set:
+  - train.n_seeds=1
+grid:
+  model.params.hidden: [16, 32]
+  model.params.dropout: [0.2, 0.4]
+  train.loss: ["mse+ic", "ic"]
+  features.selection.enabled: [true, false]

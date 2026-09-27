@@ -66,9 +66,9 @@ split:
 
 model:
   name: lstm
-  params:
-    seq_len: 40
-    hidden: 64
+  params:                              # 第一轮调参（2021–2022）：hidden=32 在 6 组对比中全部优于 64
+    seq_len: 20
+    hidden: 32
     layers: 2
     dropout: 0.2
     emb_dim: 8

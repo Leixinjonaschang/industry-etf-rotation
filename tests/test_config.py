@@ -16,7 +16,9 @@ def test_layered_config_and_overrides():
     )
     assert cfg.experiment.name == "lstm_raw_h5"
     assert cfg.label.type == "raw" and cfg.label.horizon == 10
-    assert cfg.model.params["hidden"] == 128 and cfg.model.params["seq_len"] == 40  # 深合并
+    base = load_config(PROJECT_ROOT / "configs" / "base.yaml")
+    assert cfg.model.params["hidden"] == 128  # 覆盖生效
+    assert cfg.model.params["seq_len"] == base.model.params["seq_len"]  # 其余参数深合并保留
     assert cfg.features.categories == ["momentum", "trend"]
     assert cfg.root == PROJECT_ROOT
 
