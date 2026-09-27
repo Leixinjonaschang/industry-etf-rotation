@@ -36,6 +36,7 @@ class NNModel(BaseModel):
         self.history = int(self.params["seq_len"])
         self.trainers: list = []
         self._bundle = None
+        self.seed_cache: Path | None = None  # 由 walk-forward 设置：逐种子缓存，中断后不必重训已完成的种子
 
     def fit(self, panel: Panel, train_pos: np.ndarray, val_pos: np.ndarray) -> dict[str, Any]:
         import torch
@@ -52,7 +53,18 @@ class NNModel(BaseModel):
             trainer = NNTrainer(
                 self.params, self.train_cfg, device, self.seed + 1000 * k, self.encoder
             )
-            info = trainer.fit(panel, self._bundle, train_pos, val_pos)
+            cached = self.seed_cache / f"seed{k}.pt" if self.seed_cache else None
+            if cached is not None and cached.exists():
+                blob = torch.load(cached, map_location="cpu", weights_only=False)
+                trainer.model = trainer._build_model(int(self._bundle.x.shape[2]), panel.n_industries)
+                trainer.model.load_state_dict(blob["state"])
+                info = blob["info"]
+            else:
+                info = trainer.fit(panel, self._bundle, train_pos, val_pos)
+                if cached is not None:
+                    cached.parent.mkdir(parents=True, exist_ok=True)
+                    state = {n: v.detach().cpu() for n, v in trainer.model.state_dict().items()}
+                    torch.save({"state": state, "info": info}, cached)
             log.info(
                 "  seed %d：最佳 epoch %d/%d，验证分数 %s，用时 %.1fs",
                 info["seed"],

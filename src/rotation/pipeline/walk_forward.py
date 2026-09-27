@@ -88,6 +88,8 @@ def run_walk_forward(
         )
         model = build_model(cfg)
         produces_returns = model.produces_returns
+        if hasattr(model, "seed_cache"):
+            model.seed_cache = fold_dir / f"fold_{fold.index:03d}_seeds"
         fold_panel, pca_info = panel, None
         if cfg.features.pca_components > 0:
             fold_panel, pca_info = fit_fold_pca(panel, fold.train_pos, cfg.features.pca_components)
