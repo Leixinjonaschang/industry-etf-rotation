@@ -48,7 +48,7 @@ features:
   min_valid_ratio: 0.9
   pca_components: 0
   selection:
-    enabled: false                     # 第二轮调参：用全部 52 个候选因子明显优于旧筛选的 8 个（LSTM 与岭回归均如此）
+    enabled: true                      # 特征方案对比（开发期）：LSTM 新筛选 0.041 > 全部 52 个 0.032 > 旧 8 个 0.013；岭回归 0.053 / 0.059 / 0.038
     method: importance                 # importance（RF + XGBoost + |RankIC| 综合分 → 相关簇保留/PCA 合成 → 剔除末位）| ic_threshold（旧方法）
     corr_threshold: 0.8                # |ρ| ≥ 该值的因子聚成一簇（全链接）
     tree_max_samples: 30000
