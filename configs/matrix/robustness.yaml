@@ -12,6 +12,7 @@ experiments:
     set: ["features.categories=[momentum, trend, oscillator, volume, volatility, valuation]"]
   - {config: configs/experiments/lstm_excess_h5.yaml, name: r2_norm_ts, set: [features.normalize=ts]}
   - {config: configs/experiments/lstm_excess_h5.yaml, name: r2_all_factors, set: [features.selection.enabled=false]}
+  - {config: configs/experiments/lstm_excess_h5.yaml, name: r2_old_factors, set: [features.selection.method=ic_threshold]}
   # R3 结构
   - {config: configs/experiments/lstm_excess_h5.yaml, name: r3_cross_attention, set: [model.params.cross_attention=true]}
   # R4 训练方式

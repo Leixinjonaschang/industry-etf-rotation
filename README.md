@@ -36,7 +36,7 @@ export ROTATION_DATA_DIR=/path/to/数据目录
 | 区间 | 用途 | 怎么跑 |
 |---|---|---|
 | 2014 | 指标预热 | 自动 |
-| 2015–2020 | 因子筛选（IC / t 值 / 稳定性 / 去相关） | 自动（`features` 阶段） |
+| 2015–2020 | 因子筛选（RF + XGBoost 重要性 + RankIC 综合打分，相关簇保留或 PCA 合成，剔除末位） | 自动（`features` 阶段） |
 | 2021–2022 | **tune**：调参，选标签、模型和映射门槛 | 默认阶段，`--phase tune` |
 | 2023–2025 | **test**：设定冻结后只跑一次 | `--phase test`（需确认，记入 `outputs/TEST_RUNS.md`） |
 
@@ -60,6 +60,16 @@ tune 阶段会把 2023 年以后的所有价格截掉，代码层面看不到。
 | 列出全部因子 | `uv run rotation factors` |
 | 测试 | `uv run pytest` |
 
+## 冻结设定（开发期 2021–2022 的结论）
+
+| 项目 | 选择 | 依据（调仓日 RankIC） |
+|---|---|---|
+| 特征 | 新筛选方法：24 个单因子 + 5 个 PCA 合成因子 | LSTM：新筛选 0.041 > 全部 52 个 0.032 > 旧 8 个 0.013；岭回归：0.053 / 0.059 / 0.038 |
+| 标签 | excess（截面超额），h = 5，oo | LSTM：excess 0.041 > raw 0.023 |
+| 主模型 | LSTM（hidden 32、2 层、dropout 0.4、seq_len 20、mse+ic、5 个种子） | 论文设定；开发期最强对照组为岭回归（0.053，t=2.19），LSTM（0.041，t=1.24）未过 G1，差异不显著 |
+
+测试期（2023–2025）只在上述设定冻结并提交后运行一次；完整过程与结果见 `RESULTS.md`。
+
 ## 配置
 
 - `configs/base.yaml`：全部默认参数，都有注释。
@@ -76,7 +86,7 @@ tune 阶段会把 2023 年以后的所有价格截掉，代码层面看不到。
 | `prediction_metrics.csv` | RankIC、HAC t、前 5 命中率、分组收益、R²_OOS |
 | `navs.csv` / `strategy_metrics.csv` | ETF 策略、行业指数策略、等权、沪深300、动量的净值与指标 |
 | `mapping_*.csv` | 每期映射明细、失败原因、覆盖率、年末全景表 |
-| `factor_selection_*.{json,csv}` | 入选因子及其 IC 统计 |
+| `factor_selection_*.{json,csv}` | 因子表：RF / XGBoost 重要性、RankIC、所属相关簇、是否入选及原因、PCA 载荷与解释方差 |
 | `outputs/_folds/<哈希>/` | 逐折预测与训练日志（按配置共享的缓存） |
 
 ## 代码结构（`src/rotation/`）
